@@ -1,0 +1,34 @@
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+
+import { CurrentUser } from '@/modules/auth/current-user.decorator';
+
+import { toSafeProfile } from './safe-profile';
+import { User } from './user.entity';
+import { UsersService } from './users.service';
+
+@Controller('users')
+export class UsersController {
+  constructor(private readonly users: UsersService) {}
+
+  @Get(':userId')
+  async getOne(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @CurrentUser() actor: User,
+  ) {
+    if (userId !== actor.id) {
+      throw new ForbiddenException({ code: 'ownership_denied' });
+    }
+
+    const user = await this.users.findById(userId);
+    if (!user) throw new NotFoundException({ code: 'not_found' });
+
+    return toSafeProfile(user);
+  }
+}

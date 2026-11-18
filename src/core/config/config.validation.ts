@@ -33,4 +33,12 @@ export const configValidationSchema = Joi.object<Config>({
   POSTGRES_SYNCHRONIZE: Joi.boolean().optional().default(false),
   POSTGRES_LOGGING: Joi.boolean().optional().default(false),
   POSTGRES_MIGRATIONS_RUN: Joi.boolean().optional().default(false),
+
+  /**
+   * JWT options
+   */
+  JWT_ACCESS_SECRET: Joi.string().min(32).required(), //TODO: should be 32 bytes not symbols
+  JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+  JWT_ISSUER: Joi.string().required(),
+  JWT_AUDIENCE: Joi.string().required(),
 });

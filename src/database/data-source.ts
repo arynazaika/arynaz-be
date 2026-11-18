@@ -27,5 +27,3 @@ export const dataSource = new DataSource({
   synchronize: false,
   logging: process.env.POSTGRES_LOGGING === 'true',
 });
-
-export default dataSource;
