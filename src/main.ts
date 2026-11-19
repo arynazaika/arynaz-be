@@ -31,19 +31,18 @@ async function bootstrap() {
     }),
   );
 
+  const configService = app.get(ConfigService);
+
   app.enableCors({
-    origin: [
-      'http://localhost:5174',
-      'http://localhost:4200',
-      'http://localhost:8080',
-    ],
+    origin: configService
+      .get('CORS_ALLOWED_ORIGINS')
+      .split(',')
+      .map((s) => s.trim()),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
-
-  const configService = app.get(ConfigService);
 
   await app.register(fastifyCookie, {
     secret: configService.get('COOKIE_SECRET'),

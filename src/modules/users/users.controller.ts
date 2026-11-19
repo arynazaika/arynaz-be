@@ -12,12 +12,14 @@ import { CurrentUser } from '@/modules/auth/current-user.decorator';
 import { toSafeProfile } from './safe-profile';
 import { User } from './user.entity';
 import { UsersService } from './users.service';
+import { RequirePermission } from '@/core/security/decorators';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly users: UsersService) {}
 
   @Get(':userId')
+  @RequirePermission('users', 'read')
   async getOne(
     @Param('userId', ParseUUIDPipe) userId: string,
     @CurrentUser() actor: User,

@@ -7,8 +7,10 @@ import { toSafeProfile } from '@/modules/users/safe-profile';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { Public } from '@/core/security/decorators';
 
 @Controller('auth')
+@Public()
 export class AuthController {
   constructor(
     private readonly auth: AuthService,

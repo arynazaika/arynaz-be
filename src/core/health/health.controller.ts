@@ -3,8 +3,10 @@ import { HealthCheck } from '@nestjs/terminus';
 
 import { HealthService } from './health.service';
 import { ConfigService } from '@/core/config/config.service';
+import { Public } from '../security/decorators';
 
 @Controller('health')
+@Public()
 export class HealthController {
   constructor(
     private readonly healthService: HealthService,

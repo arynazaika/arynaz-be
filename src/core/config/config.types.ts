@@ -2,6 +2,8 @@ export interface Config {
   PORT: number;
   NODE_ENV: 'development' | 'production';
 
+  CORS_ALLOWED_ORIGINS: string;
+
   /**
    * Cookie secret
    */
