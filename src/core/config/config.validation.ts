@@ -7,6 +7,7 @@ export const configValidationSchema = Joi.object<Config>({
   NODE_ENV: Joi.string().valid('development', 'production').required(),
 
   CORS_ALLOWED_ORIGINS: Joi.string().required(),
+  LOGIN_CHALLENGE_HMAC_KEY: Joi.string().min(32).required(),
 
   /**
    * Cookie secret
@@ -39,7 +40,7 @@ export const configValidationSchema = Joi.object<Config>({
   /**
    * JWT options
    */
-  JWT_ACCESS_SECRET: Joi.string().min(32).required(), //TODO: should be 32 bytes not symbols
+  JWT_ACCESS_SECRET: Joi.string().min(32).required(),
   JWT_REFRESH_SECRET: Joi.string().min(32).required(),
   JWT_ISSUER: Joi.string().required(),
   JWT_AUDIENCE: Joi.string().required(),

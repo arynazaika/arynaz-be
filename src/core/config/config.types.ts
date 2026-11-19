@@ -3,6 +3,7 @@ export interface Config {
   NODE_ENV: 'development' | 'production';
 
   CORS_ALLOWED_ORIGINS: string;
+  LOGIN_CHALLENGE_HMAC_KEY: string;
 
   /**
    * Cookie secret
