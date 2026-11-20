@@ -14,9 +14,11 @@ import { UsersService } from '@/modules/users/users.service';
 
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-
-const ACCESS_TTL_SECONDS = 15 * 60; // 15 mins
-const REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+import {
+  ACCESS_TTL_SECONDS,
+  REFRESH_TTL_SECONDS,
+} from './auth-cookies.service';
+import { AppException } from '@/core/errors/app-exception';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -98,5 +100,29 @@ export class AuthService implements OnModuleInit {
       ACCESS_TTL_SECONDS,
       REFRESH_TTL_SECONDS,
     };
+  }
+
+  async verifyRefreshToken(token: string | undefined): Promise<string> {
+    const invalid = () => new AppException('invalid_session', 401);
+    if (!token) throw invalid();
+
+    let payload: { sub: string; token_use: string };
+    try {
+      payload = await this.jwt.verifyAsync(token, {
+        secret: this.config.get('JWT_REFRESH_SECRET'),
+        issuer: this.config.get('JWT_ISSUER'),
+        audience: this.config.get('JWT_AUDIENCE'),
+        algorithms: ['HS256'],
+      });
+    } catch {
+      throw invalid();
+    }
+
+    if (payload.token_use !== 'refresh') throw invalid();
+
+    const user = await this.users.findById(payload.sub);
+    if (!user || user.status !== UserStatus.Active) throw invalid();
+
+    return user.id;
   }
 }

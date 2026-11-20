@@ -5,10 +5,11 @@ import { UsersModule } from '@/modules/users/users.module';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { AuthCookies } from './auth-cookies.service';
 
 @Module({
   imports: [UsersModule, JwtModule.register({ global: true })],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, AuthCookies],
 })
 export class AuthModule {}

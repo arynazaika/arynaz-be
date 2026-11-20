@@ -1,20 +1,21 @@
-import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
-import type { FastifyReply } from 'fastify';
+import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import { ConfigService } from '@/core/config/config.service';
 import { toSafeProfile } from '@/modules/users/safe-profile';
 
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Public } from '@/core/security/decorators';
+import { AuthCookies } from './auth-cookies.service';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 @Public()
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
-    private readonly config: ConfigService,
+    private readonly cookies: AuthCookies,
   ) {}
 
   @Post('register') // POST 201 Created
@@ -30,26 +31,27 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const user = await this.auth.login(dto);
-    const tokens = await this.auth.issueTokens(user.id);
-
-    const secure = this.config.get('NODE_ENV') === 'production';
-
-    reply.setCookie('access_token', tokens.accessToken, {
-      httpOnly: true,
-      secure,
-      sameSite: 'strict',
-      path: '/',
-      maxAge: tokens.ACCESS_TTL_SECONDS,
-    });
-
-    reply.setCookie('refresh_token', tokens.refreshToken, {
-      httpOnly: true,
-      secure,
-      sameSite: 'strict',
-      path: '/auth/refresh', // browser will send refresh token only to this endpoint
-      maxAge: tokens.REFRESH_TTL_SECONDS,
-    });
+    this.cookies.set(reply, await this.auth.issueTokens(user.id));
 
     return toSafeProfile(user);
+  }
+
+  @Post('refresh')
+  @HttpCode(204)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  async refresh(
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const userId = await this.auth.verifyRefreshToken(
+      req.cookies.refresh_token,
+    );
+    this.cookies.set(reply, await this.auth.issueTokens(userId));
+  }
+
+  @Post('logout')
+  @HttpCode(204)
+  logout(@Res({ passthrough: true }) reply: FastifyReply) {
+    this.cookies.clear(reply);
   }
 }
