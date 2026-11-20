@@ -12,10 +12,12 @@ import { ThrottlerModule } from '@/core/throttler/throttler.module';
  */
 import { UsersModule } from '@/modules/users/users.module';
 import { AuthModule } from '@/modules/auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, DiscoveryModule } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CsrfGuard } from '../security/csrf.guard';
 import { JwtAuthGuard } from '../security/jwt-auth.guard';
+import { PermissionGuard } from '../security/permission.guard';
+import { RouteAuditService } from '../security/route-audit.service';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { JwtAuthGuard } from '../security/jwt-auth.guard';
     DatabaseModule,
     HealthModule,
     ThrottlerModule,
-    // DiscoveryModule,
+    DiscoveryModule,
     /**
      *
      * Application modules
@@ -36,8 +38,8 @@ import { JwtAuthGuard } from '../security/jwt-auth.guard';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },
-    // { provide: APP_GUARD, useClass: PermissionGuard },
-    // RouteAuditService,
+    { provide: APP_GUARD, useClass: PermissionGuard },
+    RouteAuditService,
   ],
 })
 export class AppModule {}

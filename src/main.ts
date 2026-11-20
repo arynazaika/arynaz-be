@@ -3,15 +3,13 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import compression from '@fastify/compress';
-import fastifyCookie from '@fastify/cookie';
-import { ValidationPipe } from '@nestjs/common';
 import {
   initializeTransactionalContext,
   StorageDriver,
 } from 'typeorm-transactional';
 
 import { AppModule } from './core/app/app.module';
+import { configureApp } from './core/app/configure-app';
 import { ConfigService } from '@/core/config/config.service';
 
 async function bootstrap() {
@@ -19,38 +17,14 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    new FastifyAdapter({ trustProxy: true }),
   );
 
-  await app.register(compression);
+  await configureApp(app);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-    }),
-  );
+  const port = app.get(ConfigService).get('PORT');
 
-  const configService = app.get(ConfigService);
-
-  app.enableCors({
-    origin: configService
-      .get('CORS_ALLOWED_ORIGINS')
-      .split(',')
-      .map((s) => s.trim()),
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  });
-
-  await app.register(fastifyCookie, {
-    secret: configService.get('COOKIE_SECRET'),
-  });
-
-  const port = configService.get('PORT');
-
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 }
 
 bootstrap();

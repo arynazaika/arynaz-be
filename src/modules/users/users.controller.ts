@@ -1,11 +1,4 @@
-import {
-  Controller,
-  ForbiddenException,
-  Get,
-  NotFoundException,
-  Param,
-  ParseUUIDPipe,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 
 import { CurrentUser } from '@/modules/auth/current-user.decorator';
 
@@ -13,6 +6,7 @@ import { toSafeProfile } from './safe-profile';
 import { User } from './user.entity';
 import { UsersService } from './users.service';
 import { RequirePermission } from '@/core/security/decorators';
+import { AppException } from '@/core/errors/app-exception';
 
 @Controller('users')
 export class UsersController {
@@ -25,11 +19,11 @@ export class UsersController {
     @CurrentUser() actor: User,
   ) {
     if (userId !== actor.id) {
-      throw new ForbiddenException({ code: 'ownership_denied' });
+      throw new AppException('ownership_denied', 403);
     }
 
     const user = await this.users.findById(userId);
-    if (!user) throw new NotFoundException({ code: 'not_found' });
+    if (!user) throw new AppException('not_found', 404);
 
     return toSafeProfile(user);
   }

@@ -1,12 +1,8 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 
 import { ConfigService } from '@/core/config/config.service';
+import { AppException } from '../errors/app-exception';
 
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -27,7 +23,7 @@ export class CsrfGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<FastifyRequest>();
     if (!UNSAFE_METHODS.has(request.method)) return true;
 
-    const rejected = () => new ForbiddenException({ code: 'csrf_rejected' });
+    const rejected = () => new AppException('csrf_rejected', 403);
 
     const origin = request.headers.origin;
     if (origin && !this.allowedOrigins.has(origin)) throw rejected();

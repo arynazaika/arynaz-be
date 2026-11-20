@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 
@@ -13,6 +8,7 @@ import { UsersService } from '@/modules/users/users.service';
 import { AuthRequest } from '@/modules/auth/auth.types';
 import { IS_PUBLIC } from './decorators';
 import { readMeta } from './read-meta';
+import { AppException } from '../errors/app-exception';
 
 interface AccessPayload {
   sub: string;
@@ -32,8 +28,7 @@ export class JwtAuthGuard implements CanActivate {
     if (readMeta<boolean>(this.reflector, IS_PUBLIC, context)) return true;
 
     const request = context.switchToHttp().getRequest<AuthRequest>();
-    const invalidSession = () =>
-      new UnauthorizedException({ code: 'invalid_session' });
+    const invalidSession = () => new AppException('invalid_session', 401);
 
     const token = request.cookies?.access_token;
     if (!token) throw invalidSession();
